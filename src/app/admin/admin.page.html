@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar color="danger">
+    <ion-title>Zona Admin</ion-title>
+    <ion-buttons slot="end" class="perfil-container">
+      <ion-avatar>
+        <img src="assets/fotoperfil.png" alt="Perfil" />
+      </ion-avatar>
+      <span class="user-name">{{ userName }}</span>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Bienvenida -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Bienvenido Administrador</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Aquí puedes gestionar equipos, jugadores, partidos, posiciones y estadísticas.
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Botones principales -->
+  <ion-grid>
+    <ion-row>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="people-outline" slot="start"></ion-icon>
+          Equipos
+        </ion-button>
+      </ion-col>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="person-outline" slot="start"></ion-icon>
+          Jugadores
+        </ion-button>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="football-outline" slot="start"></ion-icon>
+          Partidos
+        </ion-button>
+      </ion-col>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
+          Posiciones
+        </ion-button>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="stats-chart-outline" slot="start"></ion-icon>
+          Estadísticas
+        </ion-button>
+      </ion-col>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="settings-outline" slot="start"></ion-icon>
+          Configuración
+        </ion-button>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="home-outline" slot="start"></ion-icon>
+          Inicio
+        </ion-button>
+      </ion-col>
+      <ion-col size="6">
+        <ion-button expand="block" color="danger" class="admin-btn">
+          <ion-icon name="musical-notes-outline" slot="start"></ion-icon>
+          Música
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+</ion-content>

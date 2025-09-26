@@ -1,0 +1,101 @@
+<ion-content class="login-content">
+  <div class="login-container">
+    <!-- Sección izquierda: imágenes lado a lado -->
+    <div class="images-section">
+      <img src="assets/firetruck.jpg" alt="Camión de Bomberos" class="login-image" />
+      <img src="assets/firefighter.jpg" alt="Bombero apagando fuego" class="login-image" />
+    </div>
+
+    <!-- Sección derecha: formulario dinámico (login / registro) -->
+    <div class="form-section">
+      <!-- LOGIN -->
+      <ion-card class="login-card" *ngIf="!isRegister">
+        <ion-card-header>
+          <ion-card-title class="login-title">Iniciar Sesión</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+          <form (ngSubmit)="login()" #loginForm="ngForm" novalidate>
+            <ion-item class="login-item">
+              <ion-label position="floating">Correo</ion-label>
+              <ion-input type="email" name="loginEmail" required [(ngModel)]="email" autocomplete="email"></ion-input>
+            </ion-item>
+
+            <ion-item class="login-item">
+              <ion-label position="floating">Contraseña</ion-label>
+              <ion-input name="loginPassword" required [type]="showPasswordLogin ? 'text' : 'password'"
+                [(ngModel)]="password" autocomplete="current-password"></ion-input>
+              <ion-icon slot="end" [name]="showPasswordLogin ? 'eye-off' : 'eye'" (click)="togglePassword('login')"
+                class="password-icon" role="button" aria-label="Mostrar contraseña"></ion-icon>
+            </ion-item>
+
+            <ion-button expand="block" color="warning" type="submit" [disabled]="!email || !password">
+              Entrar
+            </ion-button>
+          </form>
+
+          <div class="links-row">
+            <a (click)="toggleForm()" class="link-action">¿No tienes cuenta? Registrarse</a>
+            <a (click)="forgotPassword()" class="link-action">¿Olvidaste tu contraseña?</a>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- REGISTRO (cuadro en la misma pantalla) -->
+      <ion-card class="login-card" *ngIf="isRegister">
+        <ion-card-header>
+          <ion-card-title class="login-title">Registro</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+          <form (ngSubmit)="register()" #regForm="ngForm" novalidate>
+            <ion-item class="login-item">
+              <ion-label position="floating">Nombre</ion-label>
+              <ion-input type="text" name="firstName" [(ngModel)]="firstName" required></ion-input>
+            </ion-item>
+
+            <ion-item class="login-item">
+              <ion-label position="floating">Apellido</ion-label>
+              <ion-input type="text" name="lastName" [(ngModel)]="lastName" required></ion-input>
+            </ion-item>
+
+            <ion-item class="login-item">
+              <ion-label position="floating">Fecha de nacimiento</ion-label>
+              <ion-input type="text" name="birthDate" placeholder="DD/MM/YYYY" [(ngModel)]="birthDate"
+                required></ion-input>
+            </ion-item>
+
+            <ion-item class="login-item">
+              <ion-label position="floating">Correo</ion-label>
+              <ion-input type="email" name="regEmail" [(ngModel)]="email" required></ion-input>
+            </ion-item>
+
+            <ion-item class="login-item">
+              <ion-label position="floating">Contraseña</ion-label>
+              <ion-input [type]="showPasswordRegister ? 'text' : 'password'" name="regPassword" [(ngModel)]="password"
+                required></ion-input>
+              <ion-icon slot="end" [name]="showPasswordRegister ? 'eye-off' : 'eye'"
+                (click)="togglePassword('register')" class="password-icon" role="button"
+                aria-label="Mostrar contraseña"></ion-icon>
+            </ion-item>
+
+            <ion-item class="login-item">
+              <ion-label position="floating">Repetir contraseña</ion-label>
+              <ion-input [type]="showPasswordRegister ? 'text' : 'password'" name="confirmPass"
+                [(ngModel)]="confirmPassword" required></ion-input>
+            </ion-item>
+
+            <ion-button expand="block" color="warning" type="submit"
+              [disabled]="!firstName || !lastName || !email || !password || !confirmPassword">
+              Registrarse
+            </ion-button>
+          </form>
+
+          <div class="links-row">
+            <a (click)="toggleForm()" class="link-action">Ya tengo cuenta</a>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
