@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Zona Usuario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #e0f7fa;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #0277bd;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background: #0288d1;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a:hover {
+            background: #01579b;
+        }
+    </style>
+</head>
+<body>
+    <h1>👋 Bienvenido {{ email }}</h1>
+    <p>Has iniciado sesión como <b>Usuario</b>.</p>
+
+    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+</body>
+</html>
