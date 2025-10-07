@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Iniciar Sesión</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #b71c1c, #ff9800);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      display: flex;
+      width: 90%;
+      max-width: 1600px;
+      height: 700px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      background: #fff;
+    }
+
+    .images-section {
+      flex: 2;
+      display: flex;
+    }
+
+    .images-section img {
+      width: 50%;
+      object-fit: cover;
+    }
+
+    .form-section {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(to bottom right, #ff0000, #ffa500);
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 280px;
+      border-radius: 12px;
+      padding: 25px;
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    .login-card h2 {
+      color: #b71c1c;
+      margin-bottom: 20px;
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .login-card button {
+      width: 100%;
+      padding: 12px;
+      background: #ffc107;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .login-card button:hover {
+      background: #ffb300;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="images-section">
+      <img src="{{ url_for('static', filename='assets/firetruck.jpg') }}" alt="Camión de Bomberos">
+      <img src="{{ url_for('static', filename='assets/firefighter.jpg') }}" alt="Bombero">
+    </div>
+
+    <div class="form-section">
+      <div class="login-card">
+        <h2>Iniciar Sesión</h2>
+        <form method="POST" action="{{ url_for('login') }}">
+          <input type="email" name="email" placeholder="Correo" required>
+          <input type="password" name="password" placeholder="Contraseña" required>
+          <button type="submit">Entrar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
