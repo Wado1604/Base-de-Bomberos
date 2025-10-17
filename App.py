@@ -179,6 +179,12 @@ def bomberos():
     return render_template('registro_bomberos.html', bomberos=bomberos)
 
 
+@app.route('/')
+def index():
+    # Redirect root to the login page so users must authenticate first
+    return redirect(url_for('login'))
+
+
 @app.route('/api/bomberos')
 def api_bomberos():
     db = get_db_connection()
