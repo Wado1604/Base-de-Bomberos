@@ -1,167 +1,452 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Bomberos</title>
+    <title>Gestión de Bomberos</title>
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(to right, #ff3d00, #ffb300);
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff0000, #ff8c00, #ffff00);
+            min-height: 100vh;
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
             padding: 20px;
+            color: #fff;
         }
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            max-width: 900px;
-            margin: 50px auto;
-            padding: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+        .contenedor {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 95%;
+            max-width: 1100px;
+            padding: 20px 30px;
+            color: #000;
+            position: relative;
         }
+
         h2 {
             text-align: center;
-            color: #d63031;
+            color: #b30000;
+            margin-bottom: 20px;
         }
+
+        .panel {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .lista {
+            flex: 1;
+            min-width: 250px;
+            max-height: 500px;
+            overflow-y: auto;
+            background: rgba(255, 230, 230, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #b30000;
+        }
+
+        .boton-bombero {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #b30000;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .boton-bombero:hover {
+            background-color: #ff0000;
+            transform: scale(1.02);
+        }
+
+        .formulario {
+            flex: 2;
+            min-width: 400px;
+        }
+
         form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-wrap: wrap;
             gap: 15px;
         }
+
         label {
+            width: 100%;
             font-weight: bold;
-            color: #2d3436;
+            color: #222;
         }
-        input, textarea, select {
+
+        input,
+        select,
+        textarea {
             width: 100%;
             padding: 8px;
+            border: 1px solid #ccc;
             border-radius: 6px;
-            border: 1px solid #b2bec3;
+            font-size: 14px;
         }
+
         textarea {
             resize: none;
-            grid-column: span 2;
+            height: 70px;
         }
-        .botones {
-            grid-column: span 2;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        button {
-            background-color: #ffb300;
-            color: #000;
+
+        button[type="submit"],
+        .volver {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        button[type="submit"]:hover,
+        .volver:hover {
+            background-color: #ff0000;
+        }
+
+        .alerta {
+            text-align: center;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            color: white;
+            display: none;
+        }
+
+        .alerta.exito {
+            background-color: #28a745;
+        }
+
+        .alerta.actualizado {
+            background-color: #007bff;
+        }
+
+        .alerta.eliminado {
+            background-color: #dc3545;
+        }
+
+        .regresar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #b30000;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
         }
-        button:hover {
-            background-color: #ffcd38;
+
+        .regresar:hover {
+            background-color: #ff0000;
         }
-        .volver {
-            text-align: center;
-            margin-top: 15px;
+        /* Make action buttons consistent with the 'volver' style */
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
         }
-        .volver a {
-            color: #2d3436;
-            font-weight: bold;
-            text-decoration: none;
-            background: rgba(0,0,0,0.1);
-            padding: 8px 15px;
+
+        .form-actions .btn-guardar,
+        .form-actions .btn-actualizar,
+        .form-actions .volver {
+            background-color: #b30000;
+            color: white;
+            border: none;
+            padding: 10px 15px;
             border-radius: 6px;
-            transition: background 0.3s;
+            font-weight: bold;
+            cursor: pointer;
+            min-width: 110px;
+            text-align: center;
         }
-        .volver a:hover {
-            background: rgba(0,0,0,0.2);
+
+        .form-actions .btn-guardar:disabled,
+        .form-actions .btn-actualizar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
     </style>
 </head>
+
 <body>
+    <div class="contenedor">
+        <button class="regresar" onclick="window.location.href='admin'">← Regresar</button>
 
-    <div class="container">
-        <h2>Registro de Bomberos 🚒</h2>
+        <h2>🚒 Registro de Bomberos</h2>
 
-        <form id="formBomberos">
-            <div>
-                <label>Nombre</label>
-                <input type="text" id="sNombre" required>
-            </div>
-            <div>
-                <label>Rango</label>
-                <input type="text" id="sRango">
-            </div>
-            <div>
-                <label>Usuario</label>
-                <input type="text" id="sUsuario" required>
-            </div>
-            <div>
-                <label>Contraseña</label>
-                <input type="password" id="sClave" required>
-            </div>
-            <div>
-                <label>Dirección</label>
-                <input type="text" id="sDireccion" required>
-            </div>
-            <div>
-                <label>Tipo de Sangre</label>
-                <input type="text" id="sSangre" placeholder="Ej. O+">
-            </div>
-            <div>
-                <label>Activo</label>
-                <select id="bActivo">
-                    <option value="1">Sí</option>
-                    <option value="0">No</option>
-                </select>
-            </div>
-            <div>
-                <label>Capacitaciones</label>
-                <textarea id="tCapacitaciones" rows="3"></textarea>
-            </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    {# Map flask categories to CSS classes: 'success'->exito, 'updated'->actualizado, 'error'->eliminado #}
+    {% set alert_class = 'exito' if category == 'success' else ('actualizado' if category == 'updated' else ('eliminado' if category == 'error' else 'exito')) %}
+    <div class="alerta {{ alert_class }}" style="display:block" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
 
-            <div class="botones">
-                <button type="button" onclick="insertarBombero()">Guardar Datos</button>
-                <button type="button" onclick="limpiarFormulario()">Limpiar</button>
-            </div>
-        </form>
+        <div class="panel">
 
-        <div class="volver">
-            <a href="{{ url_for('admin') }}">⬅ Volver al Panel</a>
+
+            <!-- Formulario -->
+            <div class="formulario">
+                <form id="formActualizar" method="POST" action="/guardar_bombero">
+                    <input type="hidden" name="id" id="id">
+
+                    <label>Nombre</label>
+                    <input type="text" name="sNombre" id="sNombre" required>
+
+                    <label>Apellido Paterno</label>
+                    <input type="text" name="sApellido_Paterno" id="sApellido_Paterno" required>
+
+                    <label>Apellido Materno</label>
+                    <input type="text" name="sApellido_Materno" id="sApellido_Materno" required>
+
+                    <label>Fecha de Nacimiento</label>
+                    <input type="date" name="dFecha_Nacimiento" id="dFecha_Nacimiento">
+
+                    <label>CURP</label>
+                    <input type="text" name="sCurp" id="sCurp" maxlength="18">
+
+                    <label>Teléfono</label>
+                    <input type="text" name="sTelefono" id="sTelefono">
+
+                    <label>Correo</label>
+                    <input type="email" name="sCorreo" id="sCorreo">
+
+                    <label>Dirección</label>
+                    <input type="text" name="sDireccion" id="sDireccion">
+
+                    <label>Cargo</label>
+                    <input type="text" name="sCargo" id="sCargo">
+
+                    <label>Tipo de Ingreso</label>
+                    <select name="sTipo_Ingreso" id="sTipo_Ingreso">
+                        <option value="Voluntario">Voluntario</option>
+                        <option value="Base">Base</option>
+                        <option value="Temporal">Temporal</option>
+                    </select>
+
+                    <label>Fecha de Ingreso</label>
+                    <input type="date" name="dFecha_Ingreso" id="dFecha_Ingreso">
+
+                    <label>Número de Credencial</label>
+                    <input type="text" name="sNum_Credencial" id="sNum_Credencial">
+
+                    <label>Estado</label>
+                    <select name="sEstado" id="sEstado">
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                        <option value="Baja">Baja</option>
+                    </select>
+
+                    <label>Observaciones</label>
+                    <textarea name="sObservaciones" id="sObservaciones"></textarea>
+
+                    <label>Activo</label>
+                    <select name="bActivo" id="bActivo">
+                        <option value="1">Sí</option>
+                        <option value="0">No</option>
+                    </select>
+
+                    <div class="form-actions">
+                        <button type="button" id="btnSave" class="btn-guardar">Guardar</button>
+                        <button type="button" id="btnUpdate" class="btn-actualizar" disabled>Actualizar</button>
+                        <button type="button" id="btnNuevo" class="volver">↻ Nuevo</button>
+                    </div>
+                </form>
+
+                <div id="alerta" class="alerta"></div>
+            </div>
+            <!-- Lista de bomberos -->
+            <div class="lista">
+                <h3>👩‍🚒 Bomberos Registrados</h3>
+                <div id="listaBomberos">
+                    {% for b in bomberos %}
+                    <button type="button" class="boton-bombero"
+                        data-i-bomberospk="{{ b.iBomberospk }}"
+                        data-s-nombre="{{ b.sNombre }}"
+                        data-s-apellido-paterno="{{ b.sApellido_Paterno }}"
+                        data-s-apellido-materno="{{ b.sApellido_Materno }}"
+                        data-d-fecha-nacimiento="{{ b.dFecha_Nacimiento }}"
+                        data-s-curp="{{ b.sCurp }}"
+                        data-s-telefono="{{ b.sTelefono }}"
+                        data-s-correo="{{ b.sCorreo }}"
+                        data-s-direccion="{{ b.sDireccion }}"
+                        data-s-cargo="{{ b.sCargo }}"
+                        data-s-tipo-ingreso="{{ b.sTipo_Ingreso }}"
+                        data-d-fecha-ingreso="{{ b.dFecha_Ingreso }}"
+                        data-s-num-credencial="{{ b.sNum_Credencial }}"
+                        data-s-estado="{{ b.sEstado }}"
+                        data-s-observaciones="{{ b.sObservaciones }}"
+                        data-b-activo="{{ b.bActivo }}"
+                        onclick="mostrarFormularioFromButton(this)">
+                        {{ b.sNombre }} {{ b.sApellido_Paterno }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
-    </div>
 
-    <script>
-        function insertarBombero() {
-            const datos = {
-                sNombre: document.getElementById('sNombre').value,
-                sClave: document.getElementById('sClave').value,
-                sRango: document.getElementById('sRango').value,
-                tCapacitaciones: document.getElementById('tCapacitaciones').value,
-                sUsuario: document.getElementById('sUsuario').value,
-                bActivo: document.getElementById('bActivo').value,
-                sDireccion: document.getElementById('sDireccion').value,
-                sSangre: document.getElementById('sSangre').value
-            };
+        <script>
+            function mostrarFormulario(bombero) {
+                // kept for compatibility if called with a JS object
+                mostrarFormularioFromData(bombero);
+            }
 
-            fetch('/insertar_bombero', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datos)
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.mensaje);
-                limpiarFormulario(); // ✅ limpiar automáticamente después de guardar
-            })
-            .catch(err => alert('Error: ' + err));
-        }
+            function mostrarFormularioFromButton(btn) {
+                const data = btn.dataset;
+                const bom = {
+                    iBomberospk: data.iBomberospk,
+                    sNombre: data.sNombre,
+                    sApellido_Paterno: data.sApellidoPaterno || data.sApellido_paterno,
+                    sApellido_Materno: data.sApellidoMaterno || data.sApellido_materno,
+                    dFecha_Nacimiento: data.dFechaNacimiento || data.dFecha_nacimiento,
+                    sCurp: data.sCurp,
+                    sTelefono: data.sTelefono,
+                    sCorreo: data.sCorreo,
+                    sDireccion: data.sDireccion,
+                    sCargo: data.sCargo,
+                    sTipo_Ingreso: data.sTipoIngreso || data.sTipo_ingreso,
+                    dFecha_Ingreso: data.dFechaIngreso || data.dFecha_ingreso,
+                    sNum_Credencial: data.sNumCredencial || data.sNum_credencial,
+                    sEstado: data.sEstado,
+                    sObservaciones: data.sObservaciones,
+                    bActivo: data.bActivo
+                };
+                mostrarFormularioFromData(bom);
+            }
 
-        // ✅ función para limpiar el formulario manualmente o automática
-        function limpiarFormulario() {
-            document.getElementById('formBomberos').reset();
-        }
-    </script>
+            function mostrarFormularioFromData(bombero) {
+                document.getElementById('id').value = bombero.iBomberospk || '';
+                document.getElementById('formActualizar').action = bombero.iBomberospk ? ('/actualizar_bombero/' + bombero.iBomberospk) : '/guardar_bombero';
+                document.getElementById('sNombre').value = bombero.sNombre || '';
+                document.getElementById('sApellido_Paterno').value = bombero.sApellido_Paterno || '';
+                document.getElementById('sApellido_Materno').value = bombero.sApellido_Materno || '';
+                document.getElementById('dFecha_Nacimiento').value = bombero.dFecha_Nacimiento || '';
+                document.getElementById('sCurp').value = bombero.sCurp || '';
+                document.getElementById('sTelefono').value = bombero.sTelefono || '';
+                document.getElementById('sCorreo').value = bombero.sCorreo || '';
+                document.getElementById('sDireccion').value = bombero.sDireccion || '';
+                document.getElementById('sCargo').value = bombero.sCargo || '';
+                document.getElementById('sTipo_Ingreso').value = bombero.sTipo_Ingreso || '';
+                document.getElementById('dFecha_Ingreso').value = bombero.dFecha_Ingreso || '';
+                document.getElementById('sNum_Credencial').value = bombero.sNum_Credencial || '';
+                document.getElementById('sEstado').value = bombero.sEstado || '';
+                document.getElementById('sObservaciones').value = bombero.sObservaciones || '';
+                document.getElementById('bActivo').value = bombero.bActivo === '0' ? '0' : '1';
+                // Switch to edit mode: enable Update, disable Save
+                setMode('edit');
+            }
+
+            async function obtenerBombero(id) {
+                try {
+                    console.log('Fetching bombero id=', id);
+                    const resp = await fetch(`/obtener_bombero/${id}`);
+                    if (!resp.ok) {
+                        const text = await resp.text();
+                        console.error('Server error:', resp.status, text);
+                        alert('No se pudo obtener los datos del bombero. ' + resp.status + '\n' + text);
+                        return;
+                    }
+                    const data = await resp.json();
+                    console.log('Received bombero', data);
+                    mostrarFormularioFromData(data);
+                } catch (err) {
+                    console.error('Error fetching bombero:', err);
+                    alert('Error al obtener datos del bombero: ' + err.message);
+                }
+            }
+
+            function setMode(mode) {
+                const btnSave = document.getElementById('btnSave');
+                const btnUpdate = document.getElementById('btnUpdate');
+                if (mode === 'edit') {
+                    btnSave.disabled = true;
+                    btnUpdate.disabled = false;
+                } else {
+                    btnSave.disabled = false;
+                    btnUpdate.disabled = true;
+                }
+            }
+            window.addEventListener('DOMContentLoaded', () => {
+                // wire list buttons
+                document.querySelectorAll('.boton-bombero').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        if (id) obtenerBombero(id);
+                    });
+                });
+
+                // New button clears form and sets Save mode
+                document.getElementById('btnNuevo').addEventListener('click', function () {
+                    document.getElementById('formActualizar').reset();
+                    document.getElementById('formActualizar').action = '/guardar_bombero';
+                    document.getElementById('id').value = '';
+                    setMode('new');
+                });
+
+                // Save (insert)
+                document.getElementById('btnSave').addEventListener('click', function () {
+                    const form = document.getElementById('formActualizar');
+                    form.action = '/guardar_bombero';
+                    form.method = 'POST';
+                    form.submit();
+                });
+
+                // Update (submit to actualizar_bombero)
+                document.getElementById('btnUpdate').addEventListener('click', function () {
+                    const id = document.getElementById('id').value;
+                    if (!id || isNaN(Number(id))) {
+                        alert('Seleccione primero un bombero registrado válido para actualizar.');
+                        return;
+                    }
+                    const form = document.getElementById('formActualizar');
+                    // Submit to the form-based update endpoint which reads id from the hidden input
+                    form.action = '/actualizar_bombero';
+                    console.log('Submitting update to', form.action, 'with id=', id);
+                    form.method = 'POST';
+                    form.submit();
+                });
+
+                // Initialize in new mode
+                setMode('new');
+            });
+        </script>
+        <script>
+            // Show flash alerts (already rendered with display:block). Auto-hide after 4s
+            window.addEventListener('DOMContentLoaded', () => {
+                const alerts = document.querySelectorAll('.alerta');
+                if (alerts.length) {
+                    // scroll to the first alert so it's visible
+                    alerts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // auto-hide after 4 seconds
+                    setTimeout(() => {
+                        alerts.forEach(a => a.style.display = 'none');
+                    }, 4000);
+                }
+            });
+        </script>
 </body>
+
 </html>
