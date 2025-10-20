@@ -89,7 +89,8 @@ def login():
                 session['loggedin'] = True
                 session['id'] = usuario.get('iusuariopk')
                 session['email'] = usuario.get('semail') or usuario.get('susername')
-                session['rol'] = role_name or ('admin' if usuario.get('irolpk') == 1 else 'usuario')
+                # normalize role name to lowercase so 'Admin' and 'admin' behave the same
+                session['rol'] = (role_name or ('admin' if usuario.get('irolpk') == 1 else 'usuario')).lower()
                 if session['rol'] == 'admin':
                     return redirect(url_for('admin'))
                 else:
@@ -101,8 +102,8 @@ def login():
             session['loggedin'] = True
             session['id'] = usuario['id']
             session['email'] = usuario.get('correo')
-            session['rol'] = usuario.get('rol')
-            if usuario.get('rol') == 'admin':
+            session['rol'] = (usuario.get('rol') or '').lower()
+            if session['rol'] == 'admin':
                 return redirect(url_for('admin'))
             else:
                 return redirect(url_for('usuario'))
@@ -111,9 +112,9 @@ def login():
             session['loggedin'] = True
             session['id'] = usuario['id']
             session['email'] = usuario['correo']
-            session['rol'] = usuario['rol']
+            session['rol'] = (usuario.get('rol') or '').lower()
 
-            if usuario['rol'] == 'admin':
+            if session['rol'] == 'admin':
                 return redirect(url_for('admin'))
             else:
                 return redirect(url_for('usuario'))
