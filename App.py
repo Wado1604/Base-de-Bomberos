@@ -15,6 +15,70 @@ def get_db_connection():
         database="bomberos"
     )
 
+
+def ensure_usuarios_table():
+    """
+    Create the `usuarios` table if it doesn't exist using the schema provided by the user.
+    If creating the table with foreign keys fails (because referenced tables are missing),
+    create a simpler version without FK constraints so the app continues to work.
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        create_sql = """
+        CREATE TABLE IF NOT EXISTS `usuarios` (
+          `iusuariopk` INT NOT NULL AUTO_INCREMENT,
+          `ibomberopk` INT DEFAULT NULL,
+          `irolpk` INT NOT NULL,
+          `susername` VARCHAR(50) NOT NULL,
+          `semail` VARCHAR(120) DEFAULT NULL,
+          `spassword_hash` VARCHAR(255) NOT NULL,
+          `sestado` ENUM('Activo','Bloqueado','Baja') DEFAULT 'Activo',
+          `dultimo_login` DATETIME DEFAULT NULL,
+          `dcreado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+          `dactualizado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`iusuariopk`),
+          UNIQUE KEY `susername` (`susername`),
+          UNIQUE KEY `semail` (`semail`),
+          KEY `fk_usuarios_rol` (`irolpk`),
+          KEY `fk_usuarios_bombero` (`ibomberopk`),
+          CONSTRAINT `fk_usuarios_bombero` FOREIGN KEY (`ibomberopk`) REFERENCES `bomberos` (`ibomberoPK`) ON DELETE SET NULL ON UPDATE CASCADE,
+          CONSTRAINT `fk_usuarios_rol` FOREIGN KEY (`irolpk`) REFERENCES `roles` (`irolpk`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+        """
+        try:
+            cursor.execute(create_sql)
+            conn.commit()
+        except Exception as e:
+            # If FK creation failed (roles or bomberos missing), create a relaxed table without FKs
+            print(f"Warning: could not create usuarios with FKs: {e}. Creating without FK constraints.")
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS `usuarios` (
+              `iusuariopk` INT NOT NULL AUTO_INCREMENT,
+              `ibomberopk` INT DEFAULT NULL,
+              `irolpk` INT NOT NULL,
+              `susername` VARCHAR(50) NOT NULL,
+              `semail` VARCHAR(120) DEFAULT NULL,
+              `spassword_hash` VARCHAR(255) NOT NULL,
+              `sestado` ENUM('Activo','Bloqueado','Baja') DEFAULT 'Activo',
+              `dultimo_login` DATETIME DEFAULT NULL,
+              `dcreado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+              `dactualizado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (`iusuariopk`),
+              UNIQUE KEY `susername` (`susername`),
+              UNIQUE KEY `semail` (`semail`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+            """)
+            conn.commit()
+        cursor.close()
+    except Exception as ex:
+        print(f"Error ensuring usuarios table: {ex}")
+    finally:
+        if conn:
+            conn.close()
+
+
 # --- RUTA DE LOGIN ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -24,8 +88,21 @@ def login():
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM usuarios WHERE correo=%s AND password=%s", (email, password))
-        usuario = cursor.fetchone()
+        # Try to authenticate using the new `usuarios` table first
+        try:
+            cursor.execute("SELECT * FROM usuarios WHERE semail=%s AND spassword_hash=%s", (email, password))
+            usuario = cursor.fetchone()
+        except Exception:
+            # Fallback to legacy users table if new one doesn't exist
+            cursor.execute("SELECT * FROM usuarios1 WHERE correo=%s AND password=%s", (email, password))
+            usuario = cursor.fetchone()
+        # If found, and it's from usuarios table, update last login
+        if usuario and 'iusuariopk' in usuario:
+            try:
+                cursor.execute("UPDATE usuarios SET dultimo_login = NOW() WHERE iusuariopk = %s", (usuario['iusuariopk'],))
+                conn.commit()
+            except Exception as e:
+                print(f"Warning: could not update last login: {e}")
         conn.close()
 
         if usuario:
@@ -58,8 +135,8 @@ def usuario():
     return redirect(url_for('login'))
 
 # --- Mostrar y agregar usuarios ---
-@app.route("/usuarios", methods=["GET", "POST"])
-def usuarios():
+@app.route("/usuarios1", methods=["GET", "POST"])
+def usuarios1():
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
 
@@ -69,12 +146,12 @@ def usuarios():
         password = request.form["password"]  # ⚠️ pendiente encriptar
         rol = request.form["rol"]
 
-        sql = "INSERT INTO usuarios (nombre_completo, correo, password, rol) VALUES (%s, %s, %s, %s)"
+        sql = "INSERT INTO usuarios1 (nombre_completo, correo, password, rol) VALUES (%s, %s, %s, %s)"
         values = (nombre, correo, password, rol)
         cursor.execute(sql, values)
         db.commit()
 
-    cursor.execute("SELECT * FROM usuarios")
+    cursor.execute("SELECT * FROM usuarios1")
     usuarios = cursor.fetchall()
 
     cursor.close()
@@ -129,11 +206,66 @@ def combustible():
         return render_template('combustible.html', email=session['email'])
     return redirect(url_for('login'))
 
-@app.route('/gestion_usuarios')
+# --- GESTIÓN DE USUARIOS (Nueva tabla) ---
+@app.route("/gestion_usuarios", methods=["GET", "POST"])
 def gestion_usuarios():
-    if 'email' in session and session['rol'] == 'admin':
-        return render_template('gestion_usuarios.html', email=session['email'])
-    return redirect(url_for('login'))
+    if 'loggedin' not in session or session['rol'] != 'admin':
+        return redirect(url_for('login'))
+
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+
+    # --- Mostrar roles y bomberos para llenar el formulario ---
+    cursor.execute("SELECT irolpk, snombre FROM roles")
+    roles = cursor.fetchall()
+
+    # Build firefighter full names using known column names
+    cursor.execute("SELECT ibomberoPK, CONCAT(snombre, ' ', sapellido_paterno, ' ', sapellido_materno) AS nombre_completo FROM bomberos")
+    bomberos = cursor.fetchall()
+
+    # --- Registrar nuevo usuario ---
+    if request.method == "POST":
+        irolpk = request.form["rol"]
+        ibomberopk = request.form["bombero"]
+        susername = request.form["username"]
+        semail = request.form["email"]
+        spassword = request.form["password"]  # luego puedes aplicar hash
+        sestado = "Activo"
+
+        sql = """
+        INSERT INTO usuarios (irolpk, ibomberopk, susername, semail, spassword_hash, sestado)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        values = (irolpk, ibomberopk, susername, semail, spassword, sestado)
+        cursor.execute(sql, values)
+        db.commit()
+
+        flash("Usuario registrado correctamente.", "success")
+        return redirect(url_for("gestion_usuarios"))
+
+    # --- Mostrar todos los usuarios registrados ---
+    cursor.execute("""
+        SELECT u.iusuariopk, u.susername, u.semail, u.sestado, 
+               r.snombre AS rol, 
+               CONCAT(b.snombre, ' ', b.sapellido) AS bombero
+        FROM usuarios u
+        LEFT JOIN roles r ON u.irolpk = r.irolpk
+        LEFT JOIN bomberos b ON u.ibomberopk = b.ibomberoPK
+        ORDER BY u.dcreado_en DESC
+    """)
+    usuarios = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return render_template("gestion_usuarios.html", usuarios=usuarios, roles=roles, bomberos=bomberos)
+
+
+@app.route('/usuarios')
+def usuarios_alias():
+    # Backwards-compatible alias that redirects to the gestion screen for admins
+    return redirect(url_for('gestion_usuarios'))
+
 
 @app.route('/bomberos')
 def bomberos():
