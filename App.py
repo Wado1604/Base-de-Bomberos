@@ -17,62 +17,8 @@ def get_db_connection():
 
 
 def ensure_usuarios_table():
-  
-    conn = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        create_sql = """
-        CREATE TABLE IF NOT EXISTS `usuarios` (
-          `iusuariopk` INT NOT NULL AUTO_INCREMENT,
-          `ibomberopk` INT DEFAULT NULL,
-          `irolpk` INT NOT NULL,
-          `susername` VARCHAR(50) NOT NULL,
-          `semail` VARCHAR(120) DEFAULT NULL,
-          `spassword_hash` VARCHAR(255) NOT NULL,
-          `sestado` ENUM('Activo','Bloqueado','Baja') DEFAULT 'Activo',
-          `dultimo_login` DATETIME DEFAULT NULL,
-          `dcreado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-          `dactualizado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`iusuariopk`),
-          UNIQUE KEY `susername` (`susername`),
-          UNIQUE KEY `semail` (`semail`),
-          KEY `fk_usuarios_rol` (`irolpk`),
-          KEY `fk_usuarios_bombero` (`ibomberopk`),
-          CONSTRAINT `fk_usuarios_bombero` FOREIGN KEY (`ibomberopk`) REFERENCES `bomberos` (`ibomberoPK`) ON DELETE SET NULL ON UPDATE CASCADE,
-          CONSTRAINT `fk_usuarios_rol` FOREIGN KEY (`irolpk`) REFERENCES `roles` (`irolpk`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-        """
-        try:
-            cursor.execute(create_sql)
-            conn.commit()
-        except Exception as e:
-            # If FK creation failed (roles or bomberos missing), create a relaxed table without FKs
-            print(f"Warning: could not create usuarios with FKs: {e}. Creating without FK constraints.")
-            cursor.execute("""
-            CREATE TABLE IF NOT EXISTS `usuarios` (
-              `iusuariopk` INT NOT NULL AUTO_INCREMENT,
-              `ibomberopk` INT DEFAULT NULL,
-              `irolpk` INT NOT NULL,
-              `susername` VARCHAR(50) NOT NULL,
-              `semail` VARCHAR(120) DEFAULT NULL,
-              `spassword_hash` VARCHAR(255) NOT NULL,
-              `sestado` ENUM('Activo','Bloqueado','Baja') DEFAULT 'Activo',
-              `dultimo_login` DATETIME DEFAULT NULL,
-              `dcreado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-              `dactualizado_en` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-              PRIMARY KEY (`iusuariopk`),
-              UNIQUE KEY `susername` (`susername`),
-              UNIQUE KEY `semail` (`semail`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-            """)
-            conn.commit()
-        cursor.close()
-    except Exception as ex:
-        print(f"Error ensuring usuarios table: {ex}")
-    finally:
-        if conn:
-            conn.close()
+    # Disabled: table creation is managed manually in your DB. This function is a no-op now.
+    return
 
 
 def ensure_roles_and_admin_user():
@@ -82,52 +28,8 @@ def ensure_roles_and_admin_user():
     Passwords are stored in plain text here to match existing simple login flows; consider
     replacing with hashed passwords later.
     """
-    conn = None
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        # Create roles table if missing (simple schema)
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS roles (
-            irolpk INT NOT NULL AUTO_INCREMENT,
-            snombre VARCHAR(50) NOT NULL,
-            PRIMARY KEY (irolpk),
-            UNIQUE KEY (snombre)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        """)
-        conn.commit()
-
-        # Ensure two roles exist: Admin (1) and Usuario (2)
-        cur.execute("SELECT COUNT(*) FROM roles WHERE snombre = 'Admin'")
-        if cur.fetchone()[0] == 0:
-            cur.execute("INSERT INTO roles (snombre) VALUES ('Admin')")
-        cur.execute("SELECT COUNT(*) FROM roles WHERE snombre = 'Usuario'")
-        if cur.fetchone()[0] == 0:
-            cur.execute("INSERT INTO roles (snombre) VALUES ('Usuario')")
-        conn.commit()
-
-        # Ensure usuarios table exists
-        ensure_usuarios_table()
-
-        # Ensure test admin user exists (username user1)
-        cur.execute("SELECT COUNT(*) FROM usuarios WHERE susername = 'user1'")
-        exists = cur.fetchone()[0]
-        if not exists:
-            # Find admin role id
-            cur.execute("SELECT irolpk FROM roles WHERE snombre = 'Admin' LIMIT 1")
-            r = cur.fetchone()
-            admin_role = r[0] if r else 1
-            # Create a simple user linked to no bomber by default
-            cur.execute("INSERT INTO usuarios (ibomberopk, irolpk, susername, semail, spassword_hash, sestado) VALUES (%s,%s,%s,%s,%s,%s)",
-                        (None, admin_role, 'user1', 'user1@example.com', 'password', 'Activo'))
-            conn.commit()
-            print('Created test admin user: user1 / password')
-    except Exception as e:
-        print(f"Error ensuring roles/admin user: {e}")
-    finally:
-        if conn:
-            cur.close()
-            conn.close()
+    # Disabled: role/user seeding should be done manually in the DB. No-op.
+    return
 
 
 # --- RUTA DE LOGIN ---
@@ -140,13 +42,21 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         # Try to authenticate using the new `usuarios` table first
+        usuario = None
         try:
             cursor.execute("SELECT * FROM usuarios WHERE semail=%s AND spassword_hash=%s", (email, password))
             usuario = cursor.fetchone()
-        except Exception:
-            # Fallback to legacy users table if new one doesn't exist
-            cursor.execute("SELECT * FROM usuarios1 WHERE correo=%s AND password=%s", (email, password))
-            usuario = cursor.fetchone()
+        except Exception as e:
+            # If the table doesn't exist or query fails, we'll try legacy table below
+            usuario = None
+
+        # If not found in new table, try the legacy `usuarios1` table
+        if not usuario:
+            try:
+                cursor.execute("SELECT * FROM usuarios1 WHERE correo=%s AND password=%s", (email, password))
+                usuario = cursor.fetchone()
+            except Exception:
+                usuario = None
         # If found, and it's from usuarios table, update last login
         if usuario and 'iusuariopk' in usuario:
             try:
