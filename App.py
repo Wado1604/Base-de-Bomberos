@@ -274,6 +274,15 @@ def usuarios_alias():
     return redirect(url_for('gestion_usuarios'))
 
 
+# Friendly aliases for user management (no underscores)
+@app.route('/gestionusuarios')
+@app.route('/gestion-usuarios')
+@app.route('/users')
+@app.route('/user-management')
+def gestion_usuarios_aliases():
+    return redirect(url_for('gestion_usuarios'))
+
+
 @app.route('/bomberos')
 def bomberos():
     db = get_db_connection()
