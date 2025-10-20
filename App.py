@@ -282,6 +282,12 @@ def usuarios_alias():
 def gestion_usuarios_aliases():
     return redirect(url_for('gestion_usuarios'))
 
+#ruta para rol de guardia
+@app.route('/rol_guardia')
+def rol_guardia():
+    if 'email' in session and session['rol'] == 'admin':
+        return render_template('rol_guardia.html', email=session['email'])
+    return redirect(url_for('login'))
 
 @app.route('/bomberos')
 def bomberos():
