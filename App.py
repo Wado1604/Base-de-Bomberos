@@ -91,6 +91,8 @@ def login():
                 session['email'] = usuario.get('semail') or usuario.get('susername')
                 # normalize role name to lowercase so 'Admin' and 'admin' behave the same
                 session['rol'] = (role_name or ('admin' if usuario.get('irolpk') == 1 else 'usuario')).lower()
+                # display name for templates
+                session['nombre'] = usuario.get('susername') or usuario.get('semail') or usuario.get('susername') or 'Usuario'
                 if session['rol'] == 'admin':
                     return redirect(url_for('admin'))
                 else:
@@ -103,6 +105,7 @@ def login():
             session['id'] = usuario['id']
             session['email'] = usuario.get('correo')
             session['rol'] = (usuario.get('rol') or '').lower()
+            session['nombre'] = usuario.get('nombre_completo') or usuario.get('correo') or 'Usuario'
             if session['rol'] == 'admin':
                 return redirect(url_for('admin'))
             else:
@@ -113,6 +116,7 @@ def login():
             session['id'] = usuario['id']
             session['email'] = usuario['correo']
             session['rol'] = (usuario.get('rol') or '').lower()
+            session['nombre'] = usuario.get('nombre_completo') or usuario.get('correo') or 'Usuario'
 
             if session['rol'] == 'admin':
                 return redirect(url_for('admin'))
