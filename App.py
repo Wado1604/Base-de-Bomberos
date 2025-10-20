@@ -17,11 +17,7 @@ def get_db_connection():
 
 
 def ensure_usuarios_table():
-    """
-    Create the `usuarios` table if it doesn't exist using the schema provided by the user.
-    If creating the table with foreign keys fails (because referenced tables are missing),
-    create a simpler version without FK constraints so the app continues to work.
-    """
+  
     conn = None
     try:
         conn = get_db_connection()
@@ -79,6 +75,61 @@ def ensure_usuarios_table():
             conn.close()
 
 
+def ensure_roles_and_admin_user():
+    """
+    Ensure a minimal `roles` table exists with at least an Admin and Usuario role,
+    and ensure a test admin user with username 'user1' exists in `usuarios`.
+    Passwords are stored in plain text here to match existing simple login flows; consider
+    replacing with hashed passwords later.
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        # Create roles table if missing (simple schema)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS roles (
+            irolpk INT NOT NULL AUTO_INCREMENT,
+            snombre VARCHAR(50) NOT NULL,
+            PRIMARY KEY (irolpk),
+            UNIQUE KEY (snombre)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """)
+        conn.commit()
+
+        # Ensure two roles exist: Admin (1) and Usuario (2)
+        cur.execute("SELECT COUNT(*) FROM roles WHERE snombre = 'Admin'")
+        if cur.fetchone()[0] == 0:
+            cur.execute("INSERT INTO roles (snombre) VALUES ('Admin')")
+        cur.execute("SELECT COUNT(*) FROM roles WHERE snombre = 'Usuario'")
+        if cur.fetchone()[0] == 0:
+            cur.execute("INSERT INTO roles (snombre) VALUES ('Usuario')")
+        conn.commit()
+
+        # Ensure usuarios table exists
+        ensure_usuarios_table()
+
+        # Ensure test admin user exists (username user1)
+        cur.execute("SELECT COUNT(*) FROM usuarios WHERE susername = 'user1'")
+        exists = cur.fetchone()[0]
+        if not exists:
+            # Find admin role id
+            cur.execute("SELECT irolpk FROM roles WHERE snombre = 'Admin' LIMIT 1")
+            r = cur.fetchone()
+            admin_role = r[0] if r else 1
+            # Create a simple user linked to no bomber by default
+            cur.execute("INSERT INTO usuarios (ibomberopk, irolpk, susername, semail, spassword_hash, sestado) VALUES (%s,%s,%s,%s,%s,%s)",
+                        (None, admin_role, 'user1', 'user1@example.com', 'password', 'Activo'))
+            conn.commit()
+            print('Created test admin user: user1 / password')
+    except Exception as e:
+        print(f"Error ensuring roles/admin user: {e}")
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
 # --- RUTA DE LOGIN ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -104,6 +155,47 @@ def login():
             except Exception as e:
                 print(f"Warning: could not update last login: {e}")
         conn.close()
+
+        # Map session fields depending on which table provided the user
+        if usuario:
+            # usuario from new `usuarios` table
+            if 'iusuariopk' in usuario:
+                # resolve role name
+                try:
+                    conn2 = get_db_connection()
+                    cur2 = conn2.cursor()
+                    cur2.execute("SELECT snombre FROM roles WHERE irolpk = %s", (usuario.get('irolpk', None),))
+                    row = cur2.fetchone()
+                    role_name = row[0] if row else None
+                except Exception:
+                    role_name = None
+                finally:
+                    try:
+                        cur2.close()
+                        conn2.close()
+                    except Exception:
+                        pass
+
+                session['loggedin'] = True
+                session['id'] = usuario.get('iusuariopk')
+                session['email'] = usuario.get('semail') or usuario.get('susername')
+                session['rol'] = role_name or ('admin' if usuario.get('irolpk') == 1 else 'usuario')
+                if session['rol'] == 'admin':
+                    return redirect(url_for('admin'))
+                else:
+                    return redirect(url_for('usuario'))
+
+        # Fallback: if usuario came from legacy table (usuarios1), keep previous behavior
+        # legacy schema: id, correo, rol
+        if usuario and 'id' in usuario:
+            session['loggedin'] = True
+            session['id'] = usuario['id']
+            session['email'] = usuario.get('correo')
+            session['rol'] = usuario.get('rol')
+            if usuario.get('rol') == 'admin':
+                return redirect(url_for('admin'))
+            else:
+                return redirect(url_for('usuario'))
 
         if usuario:
             session['loggedin'] = True
