@@ -250,7 +250,7 @@ def gestion_usuarios():
     cursor.execute("""
         SELECT u.iusuariopk, u.susername, u.semail, u.sestado, 
                r.snombre AS rol, 
-               CONCAT(b.snombre, ' ', b.sapellido) AS bombero
+               CONCAT_WS(' ', b.snombre, b.sapellido_paterno, b.sapellido_materno) AS bombero
         FROM usuarios u
         LEFT JOIN roles r ON u.irolpk = r.irolpk
         LEFT JOIN bomberos b ON u.ibomberopk = b.ibomberoPK
