@@ -1,95 +1,303 @@
 <!DOCTYPE html>
-<html lang="es">
 
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Gestión de Usuarios</title>
   <style>
-  /* Match the bomberos page look */
-  .gestion-body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #ff0000, #ff8c00, #ffff00);
-    color: #fff;
-    min-height: 100vh;
-    padding: 20px;
-  }
-  .gestion-contenedor {
-    background-color: rgba(255,255,255,0.9);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    padding: 20px 30px;
-    color: #000;
-  }
-</style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ff0000, #ff8c00, #ffff00);
+      color: #fff;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-<div class="gestion-body">
-  <div class="gestion-contenedor container mt-4">
-  <h2>Gestión de Usuarios</h2>
-  <form method="POST" class="mb-4">
-    <div class="row">
-      <div class="col-md-3">
-        <label>Nombre de usuario:</label>
-        <input type="text" name="username" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Email:</label>
-        <input type="email" name="email" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Contraseña:</label>
-        <input type="password" name="password" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Rol:</label>
-        <select name="rol" class="form-select">
-          {% for rol in roles %}
-          <option value="{{ rol.irolpk }}">{{ rol.snombre }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
+.gestion-contenedor {
+  width: 95%;
+  max-width: 1350px;
+  margin-top: 30px;
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-    <div class="row mt-3">
-      <div class="col-md-6">
-        <label>Bombero asignado:</label>
-        <select name="bombero" class="form-select">
+h1 {
+  text-align: center;
+  font-size: 38px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+  padding-top: 10px;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+}
+
+.back-button {
+  text-decoration: none;
+  background: #ff0000;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: none;
+  transition: 0.3s;
+  position: absolute;
+  top: 30px;
+  right: 40px;
+}
+
+.back-button:hover {
+  background: #cc0000;
+}
+
+.panel {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: #111;
+  flex: 1;
+  min-width: 420px;
+}
+
+.user-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+label {
+  font-weight: bold;
+  color: #333;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+button[type="submit"] {
+  background: #b30000;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button[type="submit"]:hover {
+  background: #900000;
+}
+
+/* Tabla */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: #fff;
+  color: #111;
+  border-radius: 10px;
+  overflow: hidden;
+  table-layout: auto;
+}
+
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e6e6e6;
+  text-align: left;
+  white-space: normal;
+}
+
+th {
+  background: #f2f2f2;
+  font-weight: bold;
+}
+
+tr:hover {
+  background: #fafafa;
+}
+
+/* Botón de eliminar */
+.delete-button {
+  background: none;
+  border: none;
+  color: #d11a2a;
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.3s;
+}
+.delete-button:hover {
+  color: #a30000;
+}
+
+@media (max-width: 900px) {
+  .panel { flex-direction: column; align-items: center; }
+  h1 { font-size: 30px; }
+  .back-button { right: 20px; top: 20px; }
+}
+
+.firefighter-item:hover { background: #f2f2f2; }
+
+  </style>
+</head>
+
+<body>
+  <h1>Gestión de Usuarios</h1>
+  <a href="/admin" class="back-button">Volver</a>
+
+  <div class="gestion-contenedor">
+    <div class="panel">
+      <!-- Formulario -->
+      <div class="card">
+        <h3 style="margin-top:0;">Crear nuevo usuario</h3>
+        <form method="POST" class="user-form">
+
+      <!-- Bombero -->
+      <div>
+        <label for="firefighter_input">Nombre del bombero</label>
+        <input id="firefighter_input" type="text" placeholder="Haga clic para seleccionar un bombero..." readonly
+               style="cursor:pointer;background:#fff;" />
+        <select name="bombero" id="bombero_select" style="display:none;">
           <option value="">-- Seleccionar bombero --</option>
           {% for b in bomberos %}
           <option value="{{ b.ibomberoPK }}">{{ b.nombre_completo }}</option>
           {% endfor %}
         </select>
+        <div id="firefighter_list" style="display:none;border:1px solid #ccc;border-radius:8px;background:#fff;max-height:220px;overflow:auto;margin-top:6px;">
+          {% for b in bomberos %}
+          <div class="firefighter-item" data-id="{{ b.ibomberoPK }}" style="padding:10px;border-bottom:1px solid #eee;cursor:pointer;">
+            {{ b.nombre_completo }}
+          </div>
+          {% endfor %}
+          {% if not bomberos %}
+          <div style="padding:10px;color:#666">No hay bomberos registrados</div>
+          {% endif %}
+        </div>
       </div>
-      <div class="col-md-2 mt-4">
-        <button type="submit" class="btn btn-primary w-100">Registrar</button>
-      </div>
-    </div>
-  </form>
 
-  <h4>Usuarios registrados</h4>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Usuario</th>
-        <th>Email</th>
-        <th>Rol</th>
-        <th>Bombero</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for u in usuarios %}
-      <tr>
-        <td>{{ u.susername }}</td>
-        <td>{{ u.semail }}</td>
-        <td>{{ u.rol }}</td>
-        <td>{{ u.bombero }}</td>
-        <td>{{ u.sestado }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      <!-- Campos del usuario -->
+      <div>
+        <label for="username_input">Nombre de usuario (login)</label>
+        <input id="username_input" type="text" name="username" required />
       </div>
-    </div>
-  </body>
 
-  </html>
+      <div>
+        <label for="email_input">Correo electrónico</label>
+        <input id="email_input" type="email" name="email" required />
+      </div>
+
+      <div>
+        <label for="password_input">Contraseña</label>
+        <input id="password_input" type="password" name="password" required />
+      </div>
+
+      <div>
+        <label for="rol_select">Rol</label>
+        <select name="rol" id="rol_select">
+          {% for rol in roles %}
+          <option value="{{ rol.irolpk }}">{{ rol.snombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="estado_select">Estado</label>
+        <select name="sestado" id="estado_select">
+          <option value="Activo">Activo</option>
+          <option value="Bloqueado">Bloqueado</option>
+          <option value="Baja">Baja</option>
+        </select>
+      </div>
+
+      <div style="text-align:center;margin-top:10px;">
+        <button type="submit">Registrar usuario</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card" style="flex:1.5;">
+    <h3 style="margin-top:0;margin-bottom:10px;">Usuarios registrados</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Bombero</th>
+          <th>Rol</th>
+          <th>Correo electrónico</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td>{{ u.iusuariopk }}</td>
+          <td>{{ u.susername }}</td>
+          <td>{{ u.bombero }}</td>
+          <td>{{ u.rol }}</td>
+          <td>{{ u.semail }}</td>
+          <td>{{ u.sestado }}</td>
+          <td style="text-align:center;">
+            <form method="POST" action="/eliminar_usuario/{{ u.iusuariopk }}" onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?');" style="display:inline;">
+              <button type="submit" class="delete-button" title="Eliminar usuario">🗑️</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const input = document.getElementById('firefighter_input');
+      const list = document.getElementById('firefighter_list');
+      const hidden = document.getElementById('bombero_select');
+
+      if (input && list) {
+        input.addEventListener('click', () => {
+          list.style.display = list.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.querySelectorAll('.firefighter-item').forEach(function (el) {
+          el.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            const name = this.textContent.trim();
+            input.value = name;
+            hidden.value = id;
+            list.style.display = 'none';
+          });
+        });
+
+        document.addEventListener('click', function (e) {
+          if (!input.contains(e.target) && !list.contains(e.target)) {
+            list.style.display = 'none';
+          }
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>
