@@ -41,91 +41,68 @@ def login():
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        # Try to authenticate using the new `usuarios` table first
         usuario = None
+
+        # Intentar autenticar con la tabla usuarios
         try:
             cursor.execute("SELECT * FROM usuarios WHERE semail=%s AND spassword_hash=%s", (email, password))
             usuario = cursor.fetchone()
         except Exception as e:
-            # If the table doesn't exist or query fails, we'll try legacy table below
-            usuario = None
+            print("Error buscando en tabla usuarios:", e)
 
-        # If not found in new table, try the legacy `usuarios1` table
+        # Si no se encuentra, probar con usuarios1
         if not usuario:
             try:
                 cursor.execute("SELECT * FROM usuarios1 WHERE correo=%s AND password=%s", (email, password))
                 usuario = cursor.fetchone()
-            except Exception:
-                usuario = None
-        # If found, and it's from usuarios table, update last login
-        if usuario and 'iusuariopk' in usuario:
-            try:
-                cursor.execute("UPDATE usuarios SET dultimo_login = NOW() WHERE iusuariopk = %s", (usuario['iusuariopk'],))
-                conn.commit()
             except Exception as e:
-                print(f"Warning: could not update last login: {e}")
-        conn.close()
+                print("Error buscando en tabla usuarios1:", e)
 
-        # Map session fields depending on which table provided the user
         if usuario:
-            # usuario from new `usuarios` table
-            if 'iusuariopk' in usuario:
-                # resolve role name
-                try:
-                    conn2 = get_db_connection()
-                    cur2 = conn2.cursor()
-                    cur2.execute("SELECT snombre FROM roles WHERE irolpk = %s", (usuario.get('irolpk', None),))
-                    row = cur2.fetchone()
-                    role_name = row[0] if row else None
-                except Exception:
-                    role_name = None
-                finally:
-                    try:
-                        cur2.close()
-                        conn2.close()
-                    except Exception:
-                        pass
+            # --- Determinar rol ---
+            if 'irolpk' in usuario:
+                rol = 'admin' if usuario.get('irolpk') == 1 else 'usuario'
+            else:
+                rol = usuario.get('rol', 'usuario').lower()
 
-                session['loggedin'] = True
-                session['id'] = usuario.get('iusuariopk')
-                session['email'] = usuario.get('semail') or usuario.get('susername')
-                # normalize role name to lowercase so 'Admin' and 'admin' behave the same
-                session['rol'] = (role_name or ('admin' if usuario.get('irolpk') == 1 else 'usuario')).lower()
-                # display name for templates
-                session['nombre'] = usuario.get('susername') or usuario.get('semail') or usuario.get('susername') or 'Usuario'
-                if session['rol'] == 'admin':
-                    return redirect(url_for('admin'))
-                else:
-                    return redirect(url_for('usuario'))
-
-        # Fallback: if usuario came from legacy table (usuarios1), keep previous behavior
-        # legacy schema: id, correo, rol
-        if usuario and 'id' in usuario:
+            # --- Guardar sesión ---
             session['loggedin'] = True
-            session['id'] = usuario['id']
-            session['email'] = usuario.get('correo')
-            session['rol'] = (usuario.get('rol') or '').lower()
-            session['nombre'] = usuario.get('nombre_completo') or usuario.get('correo') or 'Usuario'
-            if session['rol'] == 'admin':
+            session['rol'] = rol
+            session['id_usuario'] = usuario.get('iusuariopk') or usuario.get('id')
+            session['email'] = usuario.get('semail') or usuario.get('correo')
+            session['nombre'] = usuario.get('susername') or usuario.get('nombre_completo') or 'Usuario'
+
+            # --- Registrar inicio en auditoría ---
+            try:
+                conn_aud = get_db_connection()
+                cur_aud = conn_aud.cursor()
+                cur_aud.execute("""
+                    INSERT INTO auditoria_sesiones (id_usuario, nombre_usuario, rol, fecha_inicio)
+                    VALUES (%s, %s, %s, NOW())
+                """, (session['id_usuario'], session['nombre'], session['rol']))
+                conn_aud.commit()
+                cur_aud.close()
+                conn_aud.close()
+            except Exception as e:
+                print("Error al registrar inicio de sesión:", e)
+
+            cursor.close()
+            conn.close()
+
+            # --- Redirigir según el rol ---
+            if rol == 'admin':
                 return redirect(url_for('admin'))
             else:
                 return redirect(url_for('usuario'))
 
-        if usuario:
-            session['loggedin'] = True
-            session['id'] = usuario['id']
-            session['email'] = usuario['correo']
-            session['rol'] = (usuario.get('rol') or '').lower()
-            session['nombre'] = usuario.get('nombre_completo') or usuario.get('correo') or 'Usuario'
-
-            if session['rol'] == 'admin':
-                return redirect(url_for('admin'))
-            else:
-                return redirect(url_for('usuario'))
         else:
             flash('Correo o contraseña incorrectos.', 'error')
+            cursor.close()
+            conn.close()
 
     return render_template('login.html')
+
+# Termina login aqui 
 
 # --- ZONA ADMIN ---
 @app.route('/admin')
@@ -165,27 +142,7 @@ def usuarios1():
     db.close()
     return render_template("usuarios.html", usuarios=usuarios)
 
-# --- Eliminar usuario ---
-@app.route("/eliminar_usuario/<int:id>", methods=["POST"])
-def eliminar_usuario(id):
-    db = get_db_connection()
-    cursor = db.cursor()
-
-    sql = "DELETE FROM usuarios WHERE id = %s"
-    cursor.execute(sql, (id,))
-    db.commit()
-
-    cursor.close()
-    db.close()
-    return redirect("/usuarios")
-
-# --- LOGOUT ---
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
-    # ================================
+# ================================
 # RUTAS PARA LOS MÓDULOS DEL ADMIN
 # ================================
 
@@ -587,6 +544,91 @@ bomberos = [
     {"id": 2, "nombre": "Luis Gómez", "edad": 28, "rango": "Teniente", "estacion": "Estación 2"},
     {"id": 3, "nombre": "Carlos Ramírez", "edad": 32, "rango": "Sargento", "estacion": "Estación 3"}
 ]
+
+@app.route('/auditoria_usuario')
+def auditoria_usuario():
+    auditorias = []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM auditoria_sesiones ORDER BY fecha_inicio DESC")
+        auditorias = cursor.fetchall()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print("Error al obtener datos de auditoría:", e)
+
+    return render_template('auditoria_usuario.html', auditorias=auditorias)
+
+
+# --- LOGOUT ---
+@app.route('/logout')
+def logout():
+    try:
+        id_usuario = session.get('id_usuario')
+        if id_usuario:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE auditoria_sesiones
+                SET fecha_salida = NOW()
+                WHERE id_usuario = %s
+                  AND fecha_salida IS NULL
+                ORDER BY fecha_inicio DESC
+                LIMIT 1
+            """, (id_usuario,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+    except Exception as e:
+        print("Error al actualizar salida:", e)
+
+    session.clear()
+    return redirect(url_for('login'))
+
+
+
+@app.route('/auditoria_sesiones')
+def auditoria_sesiones():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM auditoria_sesiones WHERE rol = 'admin' ORDER BY fecha_inicio DESC")
+        admins = cursor.fetchall()
+
+        cursor.execute("SELECT * FROM auditoria_sesiones WHERE rol = 'usuario' ORDER BY fecha_inicio DESC")
+        usuarios = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error al obtener auditoría: {e}")
+        admins, usuarios = [], []
+
+    return render_template('auditoria_sesiones.html', admins=admins, usuarios=usuarios)
+
+
+# --- Eliminar usuario (función única y corregida) ---
+@app.route('/eliminar_usuario/<int:iusuariopk>', methods=['POST'])
+def eliminar_usuario(iusuariopk):
+    try:
+        conn = get_db_connection()  # ✅ nombre correcto
+        cursor = conn.cursor()
+        sql = "DELETE FROM usuarios WHERE iusuariopk = %s"
+        cursor.execute(sql, (iusuariopk,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        flash("Usuario eliminado correctamente.", "success")
+        return redirect(url_for('gestion_usuarios'))  # ✅ regresa a la tabla de usuarios
+    except Exception as e:
+        print(f"Error al eliminar usuario: {e}")
+        flash(f"Error al eliminar usuario: {e}", "error")
+        return redirect(url_for('gestion_usuarios'))
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
