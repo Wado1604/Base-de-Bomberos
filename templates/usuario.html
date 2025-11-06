@@ -1,36 +1,157 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Zona Usuario</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #e0f7fa;
-            text-align: center;
-            padding: 50px;
-        }
-        h1 {
-            color: #0277bd;
-        }
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 15px;
-            background: #0288d1;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        a:hover {
-            background: #01579b;
-        }
-    </style>
-</head>
-<body>
-    <h1>👋 Bienvenido {{ email }}</h1>
-    <p>Has iniciado sesión como <b>Usuario</b>.</p>
 
-    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Administración</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ff0000, #ff8c00, #ffff00);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .top-bar span {
+      font-size: 20px;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .top-bar a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 8px 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+
+    .top-bar a:hover {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .card {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, background 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .card img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 15px;
+      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.6));
+    }
+
+    .card h2 {
+      margin: 10px 0;
+      font-size: 22px;
+    }
+
+    .card p {
+      font-size: 15px;
+      color: #ddd;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    .btn {
+      background: #ffcc00;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #000;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #ffaa00;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top-bar">
+    <span>👋 Bienvenido {{ session['nombre'] }}</span>
+    <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+  </div>
+
+  <h1>Panel de Administración</h1>
+
+  <div class="grid">
+    <div class="card">
+      <img src="{{ url_for('static', filename='assets/icon_inventario.png') }}" alt="Inventario">
+      <h2>Inventario</h2>
+      <p>Gestión de equipos y materiales de los bomberos.</p>
+      <a class="btn" href="{{ url_for('inventario') }}">Entrar</a>
+    </div>
+
+    <div class="card">
+      <img src="{{ url_for('static', filename='assets/icon_telefonema.png') }}" alt="Telefonema">
+      <h2>Telefonemas</h2>
+      <p>Registro de llamadas y servicios atendidos.</p>
+      <a class="btn" href="{{ url_for('telefonema') }}">Entrar</a>
+    </div>
+
+    <div class="card">
+      <img src="{{ url_for('static', filename='assets/icon_servicios.png') }}" alt="Servicios">
+      <h2>Tipos de Servicios</h2>
+      <p>Estadísticas de accidentes e incidentes.</p>
+      <a class="btn" href="{{ url_for('servicios') }}">Entrar</a>
+    </div>
+
+    <div class="card">
+      <img src="{{ url_for('static', filename='assets/icon_combustible.png') }}" alt="Combustible">
+      <h2>Combustible</h2>
+      <p>Control de gasolina y diésel usado por las unidades.</p>
+      <a class="btn" href="{{ url_for('combustible') }}">Entrar</a>
+    </div>
+
+
+  </div>
 </body>
+
 </html>
