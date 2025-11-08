@@ -1,146 +1,176 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rol de Guardia Voluntaria</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(120deg, #ff3c00, #ff7b00);
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 40px auto;
-      background-color: #fff4ef;
-      border-radius: 15px;
-      padding: 20px 40px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    h1 {
-      text-align: center;
-      color: #b30000;
-      margin-bottom: 30px;
-    }
-
-    form {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-    }
-
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 6px;
-      color: #333;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 8px 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    .half {
-      width: 48%;
-    }
-
-    textarea {
-      resize: none;
-      height: 80px;
-    }
-
-    .btn-container {
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    button {
-      background-color: #b30000;
-      color: #fff;
-      padding: 10px 25px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background-color: #ff4c4c;
-    }
-
-    .link-regresar {
-      display: inline-block;
-      background-color: #b30000;
-      color: #fff;
-      padding: 8px 15px;
-      border-radius: 8px;
-      text-decoration: none;
-      position: absolute;
-      margin-bottom: 10px;
-      transition: 0.3s;
-      right: 260px;
-    }
-
-    .link-regresar:hover {
-      background-color: #ff4c4c;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardias | Bomberos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(120deg, #ff3300, #ff9933);
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #ffe6dc;
+            max-width: 1150px;
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        h2 {
+            text-align: center;
+            color: #a00000;
+            margin-bottom: 25px;
+        }
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-decoration: none; /* 🔹 sin subrayado */
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn-rojo {
+            background-color: #b00000;
+            color: white;
+            text-decoration: none; /* 🔹 sin subrayado */
+        }
+        .btn-rojo:hover { background-color: #cc0000; }
+        .btn-regresar {
+            background-color: #b00000;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            float: right;
+            text-decoration: none; /* 🔹 sin subrayado */
+        }
+        .btn-regresar:hover {
+            background-color: #cc0000;
+            text-decoration: none; /* 🔹 sin subrayado */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #ff704d;
+            color: white;
+        }
+        tr:hover { background-color: #ffe6e6; }
+        h3 {
+            color: #a00000;
+            margin-top: 30px;
+        }
+        form {
+            background-color: #fff4f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+        }
+        label {
+            font-weight: bold;
+            color: #a00000;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        /* 🔽 Contenedor del botón inferior derecho */
+        .boton-derecha {
+            text-align: right;
+        }
+        .boton-derecha a {
+            text-decoration: none; /* 🔹 sin subrayado */
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <a href="{{ url_for('admin') }}" class="btn-regresar">← Regresar</a>
+        <h2>🚒 Registro de Guardias</h2>
 
-  <div class="container">
-    <a href="{{ url_for('admin') }}" class="link-regresar">← Regresar</a>
-    <h1>🚒 Rol de Guardia Voluntaria</h1>
+        <!-- Formulario nueva guardia -->
+        <form action="{{ url_for('insertar_guardia') }}" method="POST">
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
+                <div>
+                    <label>Responsable:</label>
+                    <select name="sresponsable_guardia" required>
+                        <option value="">Seleccionar...</option>
+                        {% for b in bomberos %}
+                        <option value="{{ b.nombre_completo }}">{{ b.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Personal 1:</label>
+                    <select name="spersonal1" required>
+                        <option value="">Seleccionar...</option>
+                        {% for b in bomberos %}
+                        <option value="{{ b.nombre_completo }}">{{ b.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Personal 2:</label>
+                    <select name="spersonal2" required>
+                        <option value="">Seleccionar...</option>
+                        {% for b in bomberos %}
+                        <option value="{{ b.nombre_completo }}">{{ b.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Personal 3 (opcional):</label>
+                    <select name="spersonal3">
+                        <option value="">Seleccionar...</option>
+                        {% for b in bomberos %}
+                        <option value="{{ b.nombre_completo }}">{{ b.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Fecha:</label>
+                    <input type="date" name="dfecha" required>
+                </div>
+                <div>
+                    <label>Hora Entrada:</label>
+                    <input type="time" name="dhora_entrada" required>
+                </div>
+                <div>
+                    <label>Hora Salida:</label>
+                    <input type="time" name="dhora_salida" required>
+                </div>
+            </div>
+            <label>Novedades:</label>
+            <textarea name="snovedades" rows="3" placeholder="Escribe aquí novedades o incidentes..."></textarea>
+            <button type="submit" class="btn btn-rojo">Guardar Guardia</button>
+        </form>
 
-    <form action="{{ url_for('rol_guardia') }}" method="POST">
-      <div class="half">
-        <label for="snombre">Nombre</label>
-        <input type="text" id="snombre" name="snombre" required>
-      </div>
-
-      <div class="half">
-        <label for="sresponsable_guardia">Responsable de Guardia</label>
-        <input type="text" id="sresponsable_guardia" name="sresponsable_guardia" required>
-      </div>
-
-      <div class="half">
-        <label for="dfecha">Fecha</label>
-        <input type="date" id="dfecha" name="dfecha" required>
-      </div>
-
-      <div class="half">
-        <label for="dhora_entrada">Hora de Entrada</label>
-        <input type="time" id="dhora_entrada" name="dhora_entrada" required>
-      </div>
-
-      <div class="half">
-        <label for="dhora_salida">Hora de Salida</label>
-        <input type="time" id="dhora_salida" name="dhora_salida" required>
-      </div>
-
-      <div class="half">
-        <label for="spersonal">Personal de Apoyo</label>
-        <input type="text" id="spersonal" name="spersonal" placeholder="Ejemplo: Juan, Pedro, Ana">
-      </div>
-
-      <div style="width: 100%;">
-        <label for="snovedades">Novedades</label>
-        <textarea id="snovedades" name="snovedades" placeholder="Observaciones o comentarios..."></textarea>
-      </div>
-
-      <div class="btn-container">
-        <button type="submit">Registrar Guardia</button>
-      </div>
-    </form>
-  </div>
+        <!-- 🔽 Botón inferior derecha -->
+        <div class="boton-derecha">
+            <a href="{{ url_for('Guardias') }}" class="btn btn-rojo">Ver Guardias Registradas</a>
+        </div>
+    </div>
 </body>
 </html>
