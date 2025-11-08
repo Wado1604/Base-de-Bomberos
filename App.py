@@ -11,8 +11,8 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Bomberos12",  # 👈 tu contraseña de MySQL
-        database="bomberos"
+        password="ElFuerte_21",  # 👈 tu contraseña de MySQL
+        database="Bomberos"
     )
 
 
@@ -238,13 +238,87 @@ def usuarios_alias():
 @app.route('/user-management')
 def gestion_usuarios_aliases():
     return redirect(url_for('gestion_usuarios'))
-
-#ruta para rol de guardia
-@app.route('/rol_guardia')
+@app.route('/rol_guardia', methods=['GET'])
 def rol_guardia():
-    if 'email' in session and session['rol'] == 'admin':
-        return render_template('rol_guardia.html', email=session['email'])
-    return redirect(url_for('login'))
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Obtener bomberos registrados
+    cursor.execute("""
+        SELECT CONCAT(snombre, ' ', sapellido_paterno, ' ', sapellido_materno) AS nombre_completo
+        FROM bomberos
+        ORDER BY snombre
+    """)
+    bomberos = cursor.fetchall()
+
+    # Obtener las últimas 3 guardias (opcional, para mostrar debajo del formulario)
+    cursor.execute("SELECT * FROM rol_guardia_voluntaria ORDER BY dfecha DESC, dhora_entrada DESC LIMIT 3")
+    ultimas_guardias = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('rol_guardia.html', bomberos=bomberos, guardias=ultimas_guardias)
+
+
+@app.route('/insertar_guardia', methods=['POST'])
+def insertar_guardia():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        dfecha = request.form['dfecha']
+        dhora_entrada = request.form['dhora_entrada']
+        dhora_salida = request.form['dhora_salida']
+        snovedades = request.form.get('snovedades', '')
+        spersonal1 = request.form['spersonal1']
+        spersonal2 = request.form['spersonal2']
+        spersonal3 = request.form.get('spersonal3', '')
+        sresponsable_guardia = request.form['sresponsable_guardia']
+
+        cursor.execute("""
+            INSERT INTO rol_guardia_voluntaria 
+                (dfecha, dhora_entrada, dhora_salida, snovedades,
+                 spersonal1, spersonal2, spersonal3, sresponsable_guardia)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (dfecha, dhora_entrada, dhora_salida, snovedades,
+              spersonal1, spersonal2, spersonal3, sresponsable_guardia))
+        conn.commit()
+        flash('Guardia registrada correctamente.', 'success')
+    except Exception as e:
+        print(f"Error insertando guardia: {e}")
+        flash(f'Error al registrar guardia: {e}', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('rol_guardia'))
+@app.route('/Guardias')
+def Guardias():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT * 
+        FROM rol_guardia_voluntaria 
+        ORDER BY dfecha DESC, dhora_entrada DESC
+    """)
+    guardias = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('Guardias.html', guardias=guardias)
+
 
 @app.route('/bomberos')
 def bomberos():
