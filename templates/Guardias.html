@@ -31,13 +31,13 @@
             cursor: pointer;
             font-weight: bold;
             transition: all 0.2s;
-            text-decoration: none; /* 🔹 sin subrayado */
+            text-decoration: none;
         }
         .btn:hover { transform: scale(1.05); }
         .btn-rojo {
             background-color: #b00000;
             color: white;
-            text-decoration: none; /* 🔹 sin subrayado */
+            text-decoration: none;
         }
         .btn-rojo:hover { background-color: #cc0000; text-decoration: none; }
         .btn-regresar {
@@ -48,7 +48,7 @@
             border-radius: 6px;
             font-weight: bold;
             float: right;
-            text-decoration: none; /* 🔹 sin subrayado */
+            text-decoration: none;
         }
         .btn-regresar:hover { background-color: #cc0000; text-decoration: none; }
         table {
@@ -69,6 +69,11 @@
             color: white;
         }
         tr:hover { background-color: #ffe6e6; }
+        p.no-data {
+            text-align: center;
+            color: #a00000;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -106,7 +111,7 @@
             </tbody>
         </table>
         {% else %}
-        <p style="text-align:center; color:#a00000; font-weight:bold;">No hay guardias registradas todavía.</p>
+        <p class="no-data">No hay guardias registradas todavía.</p>
         {% endif %}
     </div>
 </body>
