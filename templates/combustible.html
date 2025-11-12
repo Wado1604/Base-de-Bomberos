@@ -1,11 +1,180 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Inventario</title>
+  <meta charset="UTF-8">
+  <title>Registro de Combustible</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ff4500, #ffcc00);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      color: #111;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 30px 40px;
+      width: 900px; /* Más ancho para evitar scroll */
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      margin-top: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #d00000;
+      margin-bottom: 25px;
+      font-size: 28px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 30px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      background: #fff;
+      color: #111;
+      font-size: 15px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    input:focus, select:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0,123,255,0.5);
+    }
+
+    .botones {
+      grid-column: span 2;
+      text-align: center;
+      margin-top: 25px;
+    }
+
+    button, a {
+      display: inline-block;
+      margin: 8px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      color: #fff;
+      transition: 0.3s;
+    }
+
+    .btn-guardar {
+      background: #28a745; /* verde */
+    }
+
+    .btn-guardar:hover {
+      background: #218838;
+    }
+
+    .btn-volver {
+      background: #e9290f; /* rojo */
+    }
+
+    .btn-volver:hover {
+      background: #ef660a;
+    }
+
+    .btn-registro {
+      background: #007bff; /* azul */
+    }
+    .btn-registro:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
 <body>
-    <h1>Inventario de equipos</h1>
-    <p>Aquí va el contenido del inventario.</p>
+  <div class="container">
+    <h1>⛽ Registro de Combustible</h1>
+
+    <form action="/combustible/guardar" method="POST">
+      <div>
+        <label for="iunidadfk">Unidad</label>
+        <select name="iunidadfk" id="iunidadfk" required>
+          <option value="">Seleccionar Unidad</option>
+          {% for u in unidades %}
+            <option value="{{ u[0] }}">{{ u[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="ibomberofk">ID Bombero</label>
+        <input type="number" id="ibomberofk" name="ibomberofk" placeholder="Ejemplo: 101" required>
+      </div>
+
+      <div>
+        <label for="sdependencia">Dependencia</label>
+        <select name="sdependencia" id="sdependencia" required>
+          <option value="">Seleccionar</option>
+          <option value="patronato">Patronato</option>
+          <option value="ayuntamiento">Ayuntamiento</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="dfecha">Fecha</label>
+        <input type="date" id="dfecha" name="dfecha" required>
+      </div>
+
+      <div>
+        <label for="flitros">Litros Cargados</label>
+        <input type="number" step="0.001" id="flitros" name="flitros" placeholder="Ejemplo: 25.500" required>
+      </div>
+
+      <div>
+        <label for="fimporte_mxn">Importe (MXN)</label>
+        <input type="number" step="0.01" id="fimporte_mxn" name="fimporte_mxn" placeholder="Ejemplo: 900.50" required>
+      </div>
+
+      <div>
+        <label for="stipo_combustible">Tipo de Combustible</label>
+        <select name="stipo_combustible" id="stipo_combustible" required>
+          <option value="">Seleccionar</option>
+          <option value="magna">Magna</option>
+          <option value="premium">Premium</option>
+          <option value="diesel">Diésel</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="sfirma_nombre">Firma (Nombre)</label>
+        <input type="text" id="sfirma_nombre" name="sfirma_nombre" placeholder="Ejemplo: Juan Pérez" required>
+      </div>
+
+      <div>
+        <label for="sfirma_url">URL de Firma</label>
+        <input type="text" id="sfirma_url" name="sfirma_url" placeholder="https://firma.com/ejemplo.png">
+      </div>
+
+      <div class="botones">
+        <button type="submit" class="btn-guardar">💾 Guardar</button>
+        <a href="/unidades" class="btn-registro">🚗 Registrar Unidad</a>
+        <a href="/admin" class="btn-volver">⬅ Volver</a>
+      </div>
+    </form>
+  </div>
 </body>
 </html>
