@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Unidades</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ff4500, #ffcc00);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      color: #111;
+    }
+
+    .contenedor-principal {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+      padding: 40px;
+      flex-wrap: wrap;
+      width: 100%;
+      box-sizing: border-box;
+       
+    }
+
+
+    .cuadro {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      width: 450px;
+      min-height: 300px;
+    }
+
+    .cuadro-tabla {
+      flex: 1;
+      min-width: 500px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      max-height: none; /* ✅ Sin scroll */
+      overflow: visible; /* ✅ Sin scroll */
+    }
+
+    h1,
+    h2 {
+      text-align: center;
+      color: #d00000;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 3px;
+      display: block;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      background: #fff;
+      color: #111;
+      font-size: 15px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    .botones {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    button,
+    a {
+      display: inline-block;
+      margin: 8px;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      color: #fff;
+      transition: 0.3s;
+    }
+
+    .btn-guardar {
+      background: #28a745;
+    }
+
+    .btn-guardar:hover {
+      background: #218838;
+    }
+
+    .btn-volver {
+      background: #dc3545;
+    }
+
+    .btn-volver:hover {
+      background: #b52b37;
+    }
+
+    /* Tabla */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #ff4500;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="contenedor-principal">
+
+    <!-- 🧾 Formulario de Registro -->
+    <div class="cuadro">
+      <h1>🚒 Registrar Unidad</h1>
+      <form action="{{ url_for('guardar_unidad') }}" method="POST">
+        <div>
+          <label for="snombre">Nombre de Unidad</label>
+          <input type="text" id="snombre" name="snombre" placeholder="Ejemplo: Unidad 01" required>
+        </div>
+        <div>
+          <label for="splaca">Placa</label>
+          <input type="text" id="splaca" name="splaca" placeholder="Ejemplo: ABC-123" required>
+        </div>
+        <div>
+          <label for="stipo">Tipo de Unidad</label>
+          <select id="stipo" name="stipo" required>
+            <option value="">Seleccionar tipo</option>
+            <option value="Camión">Camión</option>
+            <option value="Pick-up">Pick-up</option>
+            <option value="Ambulancia">Ambulancia</option>
+            <option value="Motobomba">Motobomba</option>
+          </select>
+        </div>
+        <div>
+          <label for="sdescripcion">Descripción</label>
+          <input type="text" id="sdescripcion" name="sdescripcion" placeholder="Ejemplo: Unidad con tanque 500L" required>
+        </div>
+        <div>
+          <label for="sdependencia_def">Dependencia</label>
+          <select id="sdependencia_def" name="sdependencia_def" required>
+            <option value="">Seleccionar</option>
+            <option value="Patronato">Patronato</option>
+            <option value="Ayuntamiento">Ayuntamiento</option>
+          </select>
+        </div>
+        <div>
+          <label for="scombustible_def">Tipo de Combustible</label>
+          <select id="scombustible_def" name="scombustible_def" required>
+            <option value="">Seleccionar</option>
+            <option value="Magna">Magna</option>
+            <option value="Premium">Premium</option>
+            <option value="Diésel">Diésel</option>
+          </select>
+        </div>
+        <div>
+          <label for="bestado_activo">Estado</label>
+          <select id="bestado_activo" name="bestado_activo" required>
+            <option value="1">Activo</option>
+            <option value="0">Inactivo</option>
+          </select>
+        </div>
+
+        <div class="botones">
+          <button type="submit" class="btn-guardar">💾 Guardar</button>
+          <a href="/combustible" class="btn-volver">⛽ Ir a Combustible</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- 📋 Tabla de Unidades Registradas -->
+    <div class="cuadro-tabla">
+      <h2>📋 Unidades Registradas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Descripción</th>
+            <th>Placa</th>
+            <th>Dependencia</th>
+            <th>Combustible</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in unidades %}
+          <tr>
+            <td>{{ u.iunidadpk }}</td>
+            <td>{{ u.snombre }}</td>
+            <td>{{ u.stipo }}</td>
+            <td>{{ u.sdescripcion }}</td>
+            <td>{{ u.splaca }}</td>
+            <td>{{ u.sdependencia_def }}</td>
+            <td>{{ u.scombustible_def }}</td>
+            <td>{{ 'Activo' if u.bestado_activo else 'Inactivo' }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8">No hay unidades registradas.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>
