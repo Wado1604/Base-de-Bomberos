@@ -14,6 +14,7 @@ def get_db_connection():
         password="Bomberos12",  # 👈 tu contraseña de MySQL
         database="bomberos"
     )
+    
 
 
 def ensure_usuarios_table():
@@ -166,9 +167,88 @@ def servicios():
 
 @app.route('/combustible')
 def combustible():
-    if 'email' in session and session['rol'] == 'admin':
-        return render_template('combustible.html', email=session['email'])
-    return redirect(url_for('login'))
+    unidades = obtener_unidades()
+    return render_template('combustible.html', unidades=unidades)
+
+
+@app.route('/combustible/guardar', methods=['POST'])
+def guardar_combustible():
+    datos = request.form
+    # Ejecuta sp_carga_insert con los valores del formulario
+    insertar_carga(datos)
+    return redirect('/combustible')
+
+# ---------- REGISTRO DE UNIDAD ----------
+def obtener_unidades():
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM unidad ORDER BY iunidadpk DESC")
+    unidades = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return unidades
+
+@app.route('/registro_unidad')
+def registro_unidad():
+    unidades = obtener_unidades()
+    return render_template('registro_unidad.html', unidades=unidades)
+
+
+@app.route('/unidades', methods=['GET'])
+def unidades():
+    """Muestra todas las unidades registradas"""
+    try:
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM unidad ORDER BY iunidadpk DESC")
+        unidades = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return render_template('unidades.html', unidades=unidades)
+    except Exception as e:
+        print(f"❌ Error al obtener unidades: {e}")
+        flash("Error al obtener las unidades registradas.", "error")
+        return render_template('unidades.html', unidades=[])
+
+
+@app.route('/guardar_unidad', methods=['POST'])
+def guardar_unidad():
+    """Guarda una nueva unidad en la base de datos"""
+    try:
+        datos = {
+            "snombre": request.form.get('snombre'),
+            "stipo": request.form.get('stipo'),
+            "sdescripcion": request.form.get('sdescripcion'),
+            "splaca": request.form.get('splaca'),
+            "sdependencia_def": request.form.get('sdependencia_def'),
+            "scombustible_def": request.form.get('scombustible_def'),
+            "bestado_activo": 1 if request.form.get('bestado_activo') == '1' else 0
+        }
+
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.callproc('sp_unidad_insert', (
+            datos["snombre"],
+            datos["stipo"],
+            datos["sdescripcion"],
+            datos["splaca"],
+            datos["sdependencia_def"],
+            datos["scombustible_def"],
+            datos["bestado_activo"]
+        ))
+
+        db.commit()
+        cursor.close()
+        db.close()
+
+        flash("Unidad registrada correctamente ✅", "success")
+    except Exception as e:
+        print(f"❌ Error al guardar unidad: {e}")
+        flash(f"Error al guardar la unidad: {e}", "error")
+    return redirect(url_for('unidades'))
+
+
+
 
 # --- GESTIÓN DE USUARIOS (Nueva tabla) ---
 @app.route("/gestion_usuarios", methods=["GET", "POST"])
@@ -240,11 +320,87 @@ def gestion_usuarios_aliases():
     return redirect(url_for('gestion_usuarios'))
 
 #ruta para rol de guardia
-@app.route('/rol_guardia')
+@app.route('/rol_guardia', methods=['GET'])
 def rol_guardia():
-    if 'email' in session and session['rol'] == 'admin':
-        return render_template('rol_guardia.html', email=session['email'])
-    return redirect(url_for('login'))
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Obtener bomberos registrados
+    cursor.execute("""
+        SELECT CONCAT(snombre, ' ', sapellido_paterno, ' ', sapellido_materno) AS nombre_completo
+        FROM bomberos
+        ORDER BY snombre
+    """)
+    bomberos = cursor.fetchall()
+
+    # Obtener las últimas 3 guardias (opcional, para mostrar debajo del formulario)
+    cursor.execute("SELECT * FROM rol_guardia_voluntaria ORDER BY dfecha DESC, dhora_entrada DESC LIMIT 3")
+    ultimas_guardias = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('rol_guardia.html', bomberos=bomberos, guardias=ultimas_guardias)
+
+
+@app.route('/insertar_guardia', methods=['POST'])
+def insertar_guardia():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        dfecha = request.form['dfecha']
+        dhora_entrada = request.form['dhora_entrada']
+        dhora_salida = request.form['dhora_salida']
+        snovedades = request.form.get('snovedades', '')
+        spersonal1 = request.form['spersonal1']
+        spersonal2 = request.form['spersonal2']
+        spersonal3 = request.form.get('spersonal3', '')
+        sresponsable_guardia = request.form['sresponsable_guardia']
+
+        cursor.execute("""
+            INSERT INTO rol_guardia_voluntaria 
+                (dfecha, dhora_entrada, dhora_salida, snovedades,
+                 spersonal1, spersonal2, spersonal3, sresponsable_guardia)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (dfecha, dhora_entrada, dhora_salida, snovedades,
+              spersonal1, spersonal2, spersonal3, sresponsable_guardia))
+        conn.commit()
+        flash('Guardia registrada correctamente.', 'success')
+    except Exception as e:
+        print(f"Error insertando guardia: {e}")
+        flash(f'Error al registrar guardia: {e}', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('rol_guardia'))
+@app.route('/Guardias')
+def Guardias():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT * 
+        FROM rol_guardia_voluntaria 
+        ORDER BY dfecha DESC, dhora_entrada DESC
+    """)
+    guardias = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('Guardias.html', guardias=guardias)
+
 
 @app.route('/bomberos')
 def bomberos():
@@ -379,7 +535,7 @@ def bomberos_registrados():
     cursor.close()
     db.close()
     return render_template("bomberos_registrados.html", bomberos=bomberos)
-
+ 
 
 @app.route("/actualizar_bombero/<int:id>", methods=["POST"])
 def actualizar_bombero(id):
