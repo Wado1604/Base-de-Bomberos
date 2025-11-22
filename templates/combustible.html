@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>Registro de Combustible</title>
@@ -20,8 +21,9 @@
       background: rgba(255, 255, 255, 0.95);
       border-radius: 12px;
       padding: 30px 40px;
-      width: 900px; /* Más ancho para evitar scroll */
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 900px;
+      /* Más ancho para evitar scroll */
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
       margin-top: 40px;
     }
 
@@ -44,7 +46,8 @@
       display: block;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: 10px;
       border: 1px solid #aaa;
@@ -56,9 +59,10 @@
       box-sizing: border-box;
     }
 
-    input:focus, select:focus {
+    input:focus,
+    select:focus {
       border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0,123,255,0.5);
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     }
 
     .botones {
@@ -67,7 +71,8 @@
       margin-top: 25px;
     }
 
-    button, a {
+    button,
+    a {
       display: inline-block;
       margin: 8px;
       padding: 12px 20px;
@@ -82,7 +87,8 @@
     }
 
     .btn-guardar {
-      background: #28a745; /* verde */
+      background: #28a745;
+      /* verde */
     }
 
     .btn-guardar:hover {
@@ -90,7 +96,8 @@
     }
 
     .btn-volver {
-      background: #e9290f; /* rojo */
+      background: #e9290f;
+      /* rojo */
     }
 
     .btn-volver:hover {
@@ -98,32 +105,42 @@
     }
 
     .btn-registro {
-      background: #007bff; /* azul */
+      background: #007bff;
+      /* azul */
     }
+
     .btn-registro:hover {
       background: #0056b3;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>⛽ Registro de Combustible</h1>
 
     <form action="/combustible/guardar" method="POST">
       <div>
-        <label for="iunidadfk">Unidad</label>
-        <select name="iunidadfk" id="iunidadfk" required>
+        <label for="iunidadpk">Unidad</label>
+        <select name="iunidadpk" id="iunidadpk" required>
           <option value="">Seleccionar Unidad</option>
           {% for u in unidades %}
-            <option value="{{ u[0] }}">{{ u[1] }}</option>
+          <option value="{{ u.iunidadpk }}">{{ u.snombre }}</option>
           {% endfor %}
         </select>
       </div>
 
+
       <div>
-        <label for="ibomberofk">ID Bombero</label>
-        <input type="number" id="ibomberofk" name="ibomberofk" placeholder="Ejemplo: 101" required>
+        <label for="ibomberoPK">Bombero</label>
+        <select name="ibomberoPK" id="ibomberoPK" required>
+          <option value="">Seleccionar bombero</option>
+          {% for b in bomberos %}
+          <option value="{{ b.ibomberoPK }}">{{ b.nombre_completo }}</option>
+          {% endfor %}
+        </select>
       </div>
+
 
       <div>
         <label for="sdependencia">Dependencia</label>
@@ -177,4 +194,5 @@
     </form>
   </div>
 </body>
+
 </html>
